@@ -17,7 +17,7 @@ group by location;
 
 # Max/Min/Avg/Count NJ and NY
 
-select CAST(`location` as STRING) `location`, max(temp_f) as max_temp_f, avg(temp_f) as avg_temp_f, min(temp_f) as min_temp_f,
+select CAST(`location` as STRING) `location`, max(temp_f) as max_temp_f, floor(avg(temp_f)) as avg_temp_f, min(temp_f) as min_temp_f,
        COUNT(temp_f) as numOfRecords
 from weather 
 WHERE `location` is not null and `location` <> 'null' and trim(`location`) <> '' and (`location` like '%NJ' or `location` like '%NY')
@@ -25,14 +25,15 @@ group by location
 having avg(temp_f) < 50;
 
 
-= "INSERT INTO sinkTopic "
-                + "SELECT sensor, "
-                + "TUMBLE_START(ts, INTERVAL '1' MINUTE) as tumbleStart, "
-                + "TUMBLE_END(ts, INTERVAL '1' MINUTE) as tumbleEnd, "
-                + "AVG(temp) AS avgTemp "
-                + "FROM sourceTopic "
-                + "WHERE sensor IS NOT null "
-                + "GROUP BY TUMBLE(ts, INTERVAL '1' MINUTE), sensor";
+# 
+
+select symbol,
+TUMBLE_START(`datetime`, INTERVAL '1' MINUTE) as tumbleStart,
+TUMBLE_END(`datetime`, INTERVAL '1' MINUTE) as tumbleEnd,
+AVG(`high`) as avgHigh
+FROM stocks
+WHERE symbol is not null
+GROUP BY TUMBLE(`datetime`, INTERVAL '1' MINUTE), symbol
                 
 # References
 
