@@ -74,6 +74,21 @@ WHERE symbol is not null
 GROUP BY TUMBLE(event_time, INTERVAL '1' MINUTE), symbol;  
 
 
+SELECT * FROM (
+  SELECT * ,
+  ROW_NUMBER() OVER (
+    PARTITION BY window_start
+    ORDER BY num_stocks desc
+  ) AS rownum
+  FROM (
+    SELECT TUMBLE_START(event_time, INTERVAL '10' MINUTE) AS window_start, symbol, COUNT(*) AS num_stocks
+    FROM stockEvents
+    GROUP BY symbol, TUMBLE(event_time, INTERVAL '10' MINUTE)
+  )
+)
+WHERE rownum <=3;
+
+
 # References
 
 * https://docs.cloudera.com/csa/1.2.0/flink-sql-table-api/topics/csa-kafka-registry-avro.html
@@ -86,6 +101,20 @@ GROUP BY TUMBLE(event_time, INTERVAL '1' MINUTE), symbol;
 #####
 
 # In progress
+
+SELECT * FROM (
+  SELECT * ,
+  ROW_NUMBER() OVER (
+    PARTITION BY window_start
+    ORDER BY num_transactions desc
+  ) AS rownum
+  FROM (
+    SELECT TUMBLE_START(event_time, INTERVAL '10' MINUTE) AS window_start, itemId, COUNT(*) AS num_transactions
+    FROM ItemTransactions
+    GROUP BY itemId, TUMBLE(event_time, INTERVAL '10' MINUTE)
+  )
+)
+WHERE rownum <=3;
 
 select fromTimestamp(`datetime`)
 from stocks
@@ -208,3 +237,5 @@ GROUP BY TUMBLE(event_time, INTERVAL '1' MINUTE), symbol;
 * https://github.com/simonellistonball/flink-precisely-demo
 
 * https://github.com/BrooksIan/Flink2Kafka
+
+* https://github.com/cloudera/flink-tutorials/tree/master/flink-sql-tutorial
