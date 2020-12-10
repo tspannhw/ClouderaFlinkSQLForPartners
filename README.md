@@ -36,15 +36,6 @@ from stocks
 WHERE symbol is not null
 GROUP BY symbol, ts
 
-# broken
-
-select symbol,
-TUMBLE_START(dt, INTERVAL '1' MINUTE) as tumbleStart,
-TUMBLE_END(dt, INTERVAL '1' MINUTE) as tumbleEnd,
-AVG(CAST(`high` as DOUBLE)) as avgHigh
-FROM stocks
-WHERE symbol is not null
-GROUP BY TUMBLE(dt, INTERVAL '1' MINUTE), symbol;  
           
 # Stock Events
  
@@ -72,6 +63,17 @@ WATERMARK FOR event_time AS event_time - INTERVAL '5' SECOND
 );
  
 
+# Stock Tumbling Window
+
+select symbol,
+TUMBLE_START(event_time, INTERVAL '1' MINUTE) as tumbleStart,
+TUMBLE_END(event_time, INTERVAL '1' MINUTE) as tumbleEnd,
+AVG(CAST(`high` as DOUBLE)) as avgHigh
+FROM stockEvents
+WHERE symbol is not null
+GROUP BY TUMBLE(event_time, INTERVAL '1' MINUTE), symbol;  
+
+
 # References
 
 * https://docs.cloudera.com/csa/1.2.0/flink-sql-table-api/topics/csa-kafka-registry-avro.html
@@ -80,6 +82,8 @@ WATERMARK FOR event_time AS event_time - INTERVAL '5' SECOND
 
 * https://ci.apache.org/projects/flink/flink-docs-release-1.11/dev/table/sql/queries.html
 
+
+#####
 
 # In progress
 
@@ -174,6 +178,18 @@ SELECT 	scada.uuid, scada.systemtime, scada.temperaturef, scada.pressure, scada.
   energy.swver, energy.hwver, energy.deviceId, energy.hwId, energy.fwId, energy.oemId, energy.`alias`, energy.devname, energy.iconhash, energy.`feature`, energy.activemode, energy.relaystate, energy.updating, energy.rssi, energy.ledoff, energy.latitude, energy.longitude, 
   energy.ontime, energy.`day`, energy.`index`, energy.`zonestr`, energy.tzstr, energy.dstoffset, energy.host, energy.currentconsumption, energy.devicetime, energy.ledon, energy.`end`, energy.`te`, energy.cpu 
 FROM energy FULL JOIN scada ON energy.systemtime = scada.systemtime
+
+create view stockEventsTumbling
+as select symbol,
+TUMBLE_START(event_time, INTERVAL '1' MINUTE) as tumbleStart,
+TUMBLE_END(event_time, INTERVAL '1' MINUTE) as tumbleEnd,
+AVG(CAST(`high` as DOUBLE)) as avgHigh
+FROM stockEvents
+WHERE symbol is not null
+GROUP BY TUMBLE(event_time, INTERVAL '1' MINUTE), symbol;  
+
+
+#
 
 # notes
 
