@@ -73,6 +73,11 @@ FROM stockEvents
 WHERE symbol is not null
 GROUP BY TUMBLE(event_time, INTERVAL '1' MINUTE), symbol;  
 
+# across catalogs
+
+select * from registry.default_database.scada;
+
+# top 3
 
 SELECT * FROM (
   SELECT * ,
