@@ -58,3 +58,59 @@ AVG(CAST(`high` as DOUBLE)) as avgHigh
 FROM stocks
 WHERE symbol is not null
 GROUP BY TUMBLE(CURRENT_TIME, INTERVAL '1' MINUTE), symbol;
+
+CREATE TABLE pos (
+   tstx BIGINT,
+   idtx BIGINT,
+   idstore INT,
+   idproduct INT,
+   quantity INT,
+   timetx AS CAST(from_unixtime(floor(tstx/1000)) AS TIMESTAMP(3)),
+   WATERMARK FOR timetx AS timetx - INTERVAL '10' SECOND
+) WITH (
+   'connector.type' = 'kafka',
+   'connector.version' = 'universal',
+   'connector.topic' = 'pos',
+   'connector.startup-mode' = 'latest-offset',
+   'connector.properties.bootstrap.servers' = 'kafka-url:9092',
+   'connector.properties.group.id' = 'FlinkSQLPOS',
+   'format.type' = 'json'
+);
+
+CREATE TABLE ItemTransactions (
+transactionId    BIGINT,
+`timestamp`    BIGINT,
+itemId    STRING,
+quantity INT,
+event_time AS CAST(from_unixtime(floor(`timestamp`/1000)) AS TIMESTAMP(3)),
+WATERMARK FOR event_time AS event_time - INTERVAL '5' SECOND
+) WITH (
+'connector.type'      = 'kafka',
+'connector.version'   = 'universal',
+'connector.topic'     = 'transaction.log.1',
+'connector.startup-mode' = 'earliest-offset',
+'connector.properties.bootstrap.servers' = '<broker_address>',
+'format.type' = 'json'
+);
+
+SELECT queryId, q.event_time as query_time, t.itemId, sum(t.quantity) AS recent_transactions
+FROM ItemTransactions AS t, Queries AS q
+WHERE t.itemId = q.itemId AND 
+t.event_time BETWEEN q.event_time - INTERVAL '1' MINUTE 
+AND q.event_time
+GROUP BY t.itemId, q.event_time, q.queryId;
+
+# notes
+
+event_time AS CAST(from_unixtime(floor(ts/1000)) AS TIMESTAMP(3)),
+
+https://docs.cloudera.com/csa/1.2.0/flink-sql-table-api/topics/csa-create-statements.html
+
+http://apache-flink-user-mailing-list-archive.2336050.n4.nabble.com/Using-logicalType-in-the-Avro-table-format-td34803.html
+
+
+https://towardsdatascience.com/event-driven-supply-chain-for-crisis-with-flinksql-be80cb3ad4f9
+
+
+https://community.cloudera.com/t5/Support-Questions/NiFi-processor-Convert-string-datetime-format-to-long-unix/td-p/226940
+
