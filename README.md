@@ -6,7 +6,11 @@ ClouderaFlinkSQLForPartners / CSA 1.2
 
 # Max, Average, Min Temperature per Location
 
-select CAST(`location` as STRING) `location`, max(temp_f) as max_temp_f, avg(temp_f) as avg_temp_f, min(temp_f) as min_temp_f from weather group by location;
+select CAST(`location` as STRING) `location`, max(temp_f) as max_temp_f, avg(temp_f) as avg_temp_f, min(temp_f) as min_temp_f 
+from weather group by location;
+
+select CAST(`location` as STRING) `location`, max(temp_f) as max_temp_f, avg(temp_f) as avg_temp_f, min(temp_f) as min_temp_f 
+from registry.default_database.weather group by location;
 
 # Max/Min/Avg/Count per NJ
 select CAST(`location` as STRING) `location`, max(temp_f) as max_temp_f, avg(temp_f) as avg_temp_f, min(temp_f) as min_temp_f,
@@ -14,6 +18,13 @@ select CAST(`location` as STRING) `location`, max(temp_f) as max_temp_f, avg(tem
 from weather 
 WHERE `location` is not null and `location` <> 'null' and trim(`location`) <> '' and `location` like '%NJ'
 group by location;
+
+select CAST(`location` as STRING) `location`, max(temp_f) as max_temp_f, avg(temp_f) as avg_temp_f, min(temp_f) as min_temp_f,
+       COUNT(temp_f) as numOfRecords
+from registry.default_database.weather 
+WHERE `location` is not null and `location` <> 'null' and trim(`location`) <> '' and `location` like '%NJ'
+group by location;
+
 
 # Max/Min/Avg/Count NJ and NY
 
@@ -24,19 +35,18 @@ WHERE `location` is not null and `location` <> 'null' and trim(`location`) <> ''
 group by location
 having avg(temp_f) < 50;
 
+select CAST(`location` as STRING) `location`, max(temp_f) as max_temp_f, floor(avg(temp_f)) as avg_temp_f, min(temp_f) as min_temp_f,
+       COUNT(temp_f) as numOfRecords
+from registry.default_database.weather 
+WHERE `location` is not null and `location` <> 'null' and trim(`location`) <> '' and (`location` like '%NJ' or `location` like '%NY')
+group by location
+having avg(temp_f) < 50;
+
+
 # Against Kudu
 
-select * from kudu.default_database.`impala::default.envirosensors`;
+select * from kudu.default_database.`impala::default.stocks`;
  
-# 
-select symbol, 
-       CAST(from_unixtime(floor(ts/1000)) AS TIMESTAMP(3)) as event_time,
-       AVG(CAST(`high` as DOUBLE)) as avgHigh
-from stocks
-WHERE symbol is not null
-GROUP BY symbol, ts
-
-          
 # Stock Events
  
 CREATE TABLE stockEvents (
