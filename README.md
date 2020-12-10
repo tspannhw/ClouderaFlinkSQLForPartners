@@ -39,15 +39,42 @@ GROUP BY symbol, ts
 # broken
 
 select symbol,
-TUMBLE_START(ts, INTERVAL '1' MINUTE) as tumbleStart,
-TUMBLE_END(ts, INTERVAL '1' MINUTE) as tumbleEnd,
+TUMBLE_START(dt, INTERVAL '1' MINUTE) as tumbleStart,
+TUMBLE_END(dt, INTERVAL '1' MINUTE) as tumbleEnd,
 AVG(CAST(`high` as DOUBLE)) as avgHigh
 FROM stocks
 WHERE symbol is not null
-GROUP BY TUMBLE(ts, INTERVAL '1' MINUTE), symbol;  
+GROUP BY TUMBLE(dt, INTERVAL '1' MINUTE), symbol;  
           
-          
+# Stock Events
+ 
+CREATE TABLE stockEvents (
+symbol    STRING,
+uuid STRING,
+`ts`    BIGINT,
+`dt`    BIGINT,
+`datetime`    STRING,
+`open`    STRING,
+`close`    STRING,
+`high`    STRING,
+`volume`    STRING,
+`low`    STRING,
+event_time AS CAST(from_unixtime(floor(`ts`/1000)) AS TIMESTAMP(3)),
+WATERMARK FOR event_time AS event_time - INTERVAL '5' SECOND
+) WITH (
+'connector.type'      = 'kafka',
+'connector.version'   = 'universal',
+'connector.topic'     = 'stocks',
+'connector.startup-mode' = 'earliest-offset',
+'connector.properties.bootstrap.servers' = 'edge2ai-1.dim.local:9092',
+'format.type' = 'registry',
+'format.registry.properties.schema.registry.url' = 'http://ec2-18-233-171-141.compute-1.amazonaws.com:7788/api/v1'
+);
+ 
+
 # References
+
+* https://docs.cloudera.com/csa/1.2.0/flink-sql-table-api/topics/csa-kafka-registry-avro.html
 
 * https://docs.cloudera.com/csa/1.2.0/release-notes/topics/csa-supported-sql.html
 
