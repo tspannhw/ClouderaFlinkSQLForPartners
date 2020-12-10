@@ -26,14 +26,16 @@ having avg(temp_f) < 50;
 
 
 # 
+
 select symbol,
-TUMBLE_START(rowtime, INTERVAL '1' MINUTE) as tumbleStart,
-TUMBLE_END(rowtime, INTERVAL '1' MINUTE) as tumbleEnd,
+TUMBLE_START(ts, INTERVAL '1' MINUTE) as tumbleStart,
+TUMBLE_END(ts, INTERVAL '1' MINUTE) as tumbleEnd,
 AVG(CAST(`high` as DOUBLE)) as avgHigh
 FROM stocks
 WHERE symbol is not null
-GROUP BY TUMBLE(rowtime, INTERVAL '1' MINUTE), symbol;
-                
+GROUP BY TUMBLE(ts, INTERVAL '1' MINUTE), symbol;  
+          
+          
 # References
 
 https://docs.cloudera.com/csa/1.2.0/release-notes/topics/csa-supported-sql.html
@@ -42,3 +44,17 @@ https://ci.apache.org/projects/flink/flink-docs-release-1.11/dev/table/sql/queri
 
 
 # In progress
+
+select fromTimestamp(`datetime`)
+from stocks
+
+select symbol, CURRENT_TIME, `high`, TIMESTAMP `datetime` as ts
+from stocks;
+
+select symbol,
+TUMBLE_START(CURRENT_TIME, INTERVAL '1' MINUTE) as tumbleStart,
+TUMBLE_END(CURRENT_TIME, INTERVAL '1' MINUTE) as tumbleEnd,
+AVG(CAST(`high` as DOUBLE)) as avgHigh
+FROM stocks
+WHERE symbol is not null
+GROUP BY TUMBLE(CURRENT_TIME, INTERVAL '1' MINUTE), symbol;
