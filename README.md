@@ -24,8 +24,19 @@ WHERE `location` is not null and `location` <> 'null' and trim(`location`) <> ''
 group by location
 having avg(temp_f) < 50;
 
+# Against Kudu
 
+select * from kudu.default_database.`impala::default.envirosensors`;
+ 
 # 
+select symbol, 
+       CAST(from_unixtime(floor(ts/1000)) AS TIMESTAMP(3)) as event_time,
+       AVG(CAST(`high` as DOUBLE)) as avgHigh
+from stocks
+WHERE symbol is not null
+GROUP BY symbol, ts
+
+# broken
 
 select symbol,
 TUMBLE_START(ts, INTERVAL '1' MINUTE) as tumbleStart,
@@ -38,9 +49,9 @@ GROUP BY TUMBLE(ts, INTERVAL '1' MINUTE), symbol;
           
 # References
 
-https://docs.cloudera.com/csa/1.2.0/release-notes/topics/csa-supported-sql.html
+* https://docs.cloudera.com/csa/1.2.0/release-notes/topics/csa-supported-sql.html
 
-https://ci.apache.org/projects/flink/flink-docs-release-1.11/dev/table/sql/queries.html
+* https://ci.apache.org/projects/flink/flink-docs-release-1.11/dev/table/sql/queries.html
 
 
 # In progress
@@ -102,15 +113,12 @@ GROUP BY t.itemId, q.event_time, q.queryId;
 
 # notes
 
-event_time AS CAST(from_unixtime(floor(ts/1000)) AS TIMESTAMP(3)),
+* https://docs.cloudera.com/csa/1.2.0/flink-sql-table-api/topics/csa-create-statements.html
 
-https://docs.cloudera.com/csa/1.2.0/flink-sql-table-api/topics/csa-create-statements.html
+* http://apache-flink-user-mailing-list-archive.2336050.n4.nabble.com/Using-logicalType-in-the-Avro-table-format-td34803.html
 
-http://apache-flink-user-mailing-list-archive.2336050.n4.nabble.com/Using-logicalType-in-the-Avro-table-format-td34803.html
+* https://towardsdatascience.com/event-driven-supply-chain-for-crisis-with-flinksql-be80cb3ad4f9
 
+* https://community.cloudera.com/t5/Support-Questions/NiFi-processor-Convert-string-datetime-format-to-long-unix/td-p/226940
 
-https://towardsdatascience.com/event-driven-supply-chain-for-crisis-with-flinksql-be80cb3ad4f9
-
-
-https://community.cloudera.com/t5/Support-Questions/NiFi-processor-Convert-string-datetime-format-to-long-unix/td-p/226940
-
+* https://github.com/cloudera/flink-tutorials/tree/master/flink-sql-tutorial
