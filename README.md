@@ -111,6 +111,43 @@ t.event_time BETWEEN q.event_time - INTERVAL '1' MINUTE
 AND q.event_time
 GROUP BY t.itemId, q.event_time, q.queryId;
 
+SELECT
+  HOUR(TUMBLE_START(ts, INTERVAL '1' HOUR)) as hour_of_day,
+  COUNT(*) as buy_cnt
+FROM
+  user_behavior
+WHERE
+  behavior = 'buy'
+GROUP BY
+  TUMBLE(ts, INTERVAL '1' HOUR)
+  
+  
+
+SELECT *
+FROM registry.default_database.scada as s
+JOIN kudu.default_database.`impala::default.envirosensors`
+FOR SYSTEM_TIME AS OF s.systemtime AS e
+ON s.uuid = e.uuid
+
+
+SELECT s.uuid, s.systemtime, s.temperaturef, e.uuid, e.adjtempf
+FROM registry.default_database.scada s
+NATURAL JOIN kudu.default_database.`impala::default.envirosensors` e
+
+
+SELECT s.uuid, s.systemtime, s.temperaturef, e.uuid, e.adjtempf
+FROM registry.default_database.scada s
+NATURAL JOIN kudu.default_database.`impala::default.envirosensors` e
+where s.uuid = e.uuid
+
+
+SELECT 	scada.uuid, scada.systemtime, scada.temperaturef, scada.pressure, scada.humidity,scada.lux,scada.proximity, scada.oxidising, scada.reducing, scada.nh3,scada.gasko,scada.amplitude100, 
+  scada.amplitude500, scada.amplitude1000, scada.lownoise, scada.midnoise, scada.highnoise, scada.amps, scada.cpu, scada.memory, scada.ipaddress, scada.host, scada.host_name, scada.macaddress, scada.endtime, scada.runtime, scada.starttime, scada.cpu_temp, 
+  scada.diskusage, scada.id, scada.temperature,scada.adjtemp, scada.adjtempf, energy.`current`, energy.voltage ,energy.`power`,energy.`total`,energy.fanstatus,
+  energy.swver, energy.hwver, energy.deviceId, energy.hwId, energy.fwId, energy.oemId, energy.`alias`, energy.devname, energy.iconhash, energy.`feature`, energy.activemode, energy.relaystate, energy.updating, energy.rssi, energy.ledoff, energy.latitude, energy.longitude, 
+  energy.ontime, energy.`day`, energy.`index`, energy.`zonestr`, energy.tzstr, energy.dstoffset, energy.host, energy.currentconsumption, energy.devicetime, energy.ledon, energy.`end`, energy.`te`, energy.cpu 
+FROM energy FULL JOIN scada ON energy.systemtime = scada.systemtime
+
 # notes
 
 * https://docs.cloudera.com/csa/1.2.0/flink-sql-table-api/topics/csa-create-statements.html
@@ -122,3 +159,9 @@ GROUP BY t.itemId, q.event_time, q.queryId;
 * https://community.cloudera.com/t5/Support-Questions/NiFi-processor-Convert-string-datetime-format-to-long-unix/td-p/226940
 
 * https://github.com/cloudera/flink-tutorials/tree/master/flink-sql-tutorial
+
+* https://ci.apache.org/projects/flink/flink-docs-release-1.11/dev/table/sql/queries.html
+
+* https://github.com/simonellistonball/flink-precisely-demo
+
+* https://github.com/BrooksIan/Flink2Kafka
